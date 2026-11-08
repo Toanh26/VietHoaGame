@@ -181,7 +181,7 @@ class UnityJob(Job):
     def run(self) -> bool:
         root = self.info.root
         marker = self.work / "installed.json"
-        installed = json.loads(marker.read_text()) if marker.exists() else {}
+        installed = json.loads(marker.read_text(encoding="utf-8")) if marker.exists() else {}
         arch = exe_arch(self.info.exe)
         if not (root / "BepInEx" / "core" / "BepInEx.dll").exists():
             url = _latest_asset("BepInEx/BepInEx", rf"BepInEx_(win_)?{arch}_5[\d.]+\.zip") or FALLBACK["bepinex"].format(arch=arch)
@@ -191,7 +191,7 @@ class UnityJob(Job):
             url = _latest_asset("bbepis/XUnity.AutoTranslator", r"XUnity\.AutoTranslator-BepInEx-\d[\d.]*\.zip") or FALLBACK["xunity"]
             self._install("xunity", url)
             installed["xunity"] = True
-        marker.write_text(json.dumps(installed))
+        marker.write_text(json.dumps(installed), encoding="utf-8")
         set_ini(root / "BepInEx" / "config" / "AutoTranslatorConfig.ini", {
             "Service": {"Endpoint": "CustomTranslate", "FallbackEndpoint": ""},
             "General": {"Language": "vi", "FromLanguage": LANGS.get(self.source_lang, "") or "en"},
@@ -211,7 +211,7 @@ class UnityJob(Job):
     def restore(self):
         root = self.info.root
         marker = self.work / "installed.json"
-        installed = json.loads(marker.read_text()) if marker.exists() else {}
+        installed = json.loads(marker.read_text(encoding="utf-8")) if marker.exists() else {}
         if installed.get("bepinex"):
             for p in ("winhttp.dll", "doorstop_config.ini", ".doorstop_version", "changelog.txt"):
                 (root / p).unlink(missing_ok=True)
