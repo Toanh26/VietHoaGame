@@ -285,6 +285,11 @@ class App:
         if not self.info.supported:
             messagebox.showerror(APP, f"{self.info.label}: " + (" ".join(self.info.notes) or "chưa hỗ trợ."))
             return
+        if self.info.engine.startswith("unity") and not messagebox.askyesno(
+                APP, "Game Unity cần cài mod BepInEx + XUnity.AutoTranslator vào thư mục game.\n\n"
+                     "Một số game (nhất là game có chống gian lận / chơi online) có thể không mở được khi có mod. "
+                     "Nếu vậy, bấm 'Khôi phục bản gốc' để gỡ mod.\n\nTiếp tục?"):
+            return
         try:
             tr, model, src = self._make_translator()
         except Exception as e:  # noqa: BLE001

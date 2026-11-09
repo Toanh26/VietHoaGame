@@ -45,9 +45,22 @@ init -999 python:
 init 999 python:
     # ---------------- chế độ quét: liệt kê câu thoại / lựa chọn rồi thoát
     _vn_flag = _vn_os.path.join(config.gamedir, "vntrans_scan.flag")
+    _vn_out_path = None
     if _vn_os.path.exists(_vn_flag):
-        with _vn_io.open(_vn_flag, "r", encoding="utf-8") as _vn_f:
-            _vn_out_path = _vn_f.read().strip()
+        # an toàn: xoá cờ NGAY, và bỏ qua cờ cũ (> 10 phút) để game không bao giờ bị kẹt ở chế độ quét
+        try:
+            import time as _vn_time
+            with _vn_io.open(_vn_flag, "r", encoding="utf-8") as _vn_f:
+                _vn_out_path = _vn_f.read().strip()
+            if _vn_time.time() - _vn_os.path.getmtime(_vn_flag) > 600:
+                _vn_out_path = None
+        except Exception:
+            _vn_out_path = None
+        try:
+            _vn_os.remove(_vn_flag)
+        except Exception:
+            pass
+    if _vn_out_path:
         _vn_items = []
         _vn_seen = set()
         for _vn_n in renpy.game.script.all_stmts:
@@ -68,11 +81,10 @@ init 999 python:
                             _vn_items.append({"t": _vn_t, "f": _vn_fn, "l": _vn_n.linenumber, "k": "menu"})
             except Exception:
                 pass
-        with _vn_io.open(_vn_out_path + ".tmp", "w", encoding="utf-8") as _vn_f:
-            _vn_f.write(u"" + _vn_json.dumps(_vn_items))
-        _vn_os.rename(_vn_out_path + ".tmp", _vn_out_path)
         try:
-            _vn_os.remove(_vn_flag)
+            with _vn_io.open(_vn_out_path + ".tmp", "w", encoding="utf-8") as _vn_f:
+                _vn_f.write(u"" + _vn_json.dumps(_vn_items))
+            _vn_os.rename(_vn_out_path + ".tmp", _vn_out_path)
         except Exception:
             pass
         _vn_os._exit(0)

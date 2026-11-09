@@ -147,7 +147,10 @@
       };
       var _bootReady = Scene_Boot.prototype.isReady;
       Scene_Boot.prototype.isReady = function () {
-        return _bootReady.call(this) && Graphics.isFontLoaded(FONT_NAME);
+        // chờ font tối đa 5 giây; font lỗi thì chạy tiếp bằng font gốc, không treo game
+        if (!this._vnFontWait) this._vnFontWait = Date.now();
+        var fontOk = Graphics.isFontLoaded(FONT_NAME) || Date.now() - this._vnFontWait > 5000;
+        return _bootReady.call(this) && fontOk;
       };
       var _stdFace = Window_Base.prototype.standardFontFace;
       Window_Base.prototype.standardFontFace = function () {

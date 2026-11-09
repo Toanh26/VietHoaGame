@@ -208,11 +208,17 @@ class RenpyJob(Job):
     def _scan(self) -> list[dict]:
         out_file = self.work / "scan.json"
         out_file.unlink(missing_ok=True)
-        flag = self.gdir / "vntrans_scan.flag"
-        flag.write_text(str(out_file), encoding="utf-8")
         exe = self.info.exe
         if not exe:
             raise RuntimeError("Không tìm thấy file .exe của game.")
+        flag = self.gdir / "vntrans_scan.flag"
+        flag.write_text(str(out_file), encoding="utf-8")
+        try:
+            return self._run_scan(exe, out_file)
+        finally:
+            flag.unlink(missing_ok=True)  # luôn xoá cờ, kể cả khi lỗi
+
+    def _run_scan(self, exe, out_file):
         self.log("Đang quét kịch bản (game sẽ tự mở rồi đóng, có thể mất 1-2 phút)...")
         proc = subprocess.Popen([str(exe)], cwd=str(self.info.root))
         t0 = time.time()
@@ -225,7 +231,6 @@ class RenpyJob(Job):
                 if not out_file.exists():
                     break
             time.sleep(1)
-        flag.unlink(missing_ok=True)
         if proc.poll() is None:
             try:
                 proc.wait(timeout=20)
@@ -278,7 +283,8 @@ class RenpyJob(Job):
 
     def restore(self):
         for p in [self.gdir / self.HOOK, self.gdir / (self.HOOK + "c"), self.gdir / "vntrans_vi.json",
-                  self.gdir / "vntrans_font.txt", self.gdir / "vntrans_scan.flag"] + list(self.gdir.glob("vntrans_font.*")):
+                  self.gdir / "vntrans_font.txt", self.gdir / "vntrans_scan.flag",
+                  self.gdir / "vntrans_missing.txt"] + list(self.gdir.glob("vntrans_font.*")):
             p.unlink(missing_ok=True)
         self.log("Đã gỡ Việt hoá (bản dịch vẫn giữ trong vntrans_vi).")
 
